@@ -4,9 +4,17 @@ import matplotlib.pyplot as plt
 import chardet
 from datetime import datetime
 from babel.dates import format_date
+import glob
+import os
+
+# Trouve le dernier fichier.csv enregistré dans ./data/temp/ pour et le stock dans la variable csv_file
+list_of_files = glob.glob("../data/temp/*.csv")
+latest_file = max(list_of_files, key=os.path.getctime)
+csv_file = latest_file
+csv_filename = os.path.basename(csv_file)
 
 # Load the data
-rawdata = open("../data/save.csv", "rb").read()
+rawdata = open("../data/temp/" + csv_filename, "rb").read()
 result = chardet.detect(rawdata)
 encoding = result["encoding"]
 
@@ -14,7 +22,7 @@ encoding = result["encoding"]
 # Load the CSV file with the correct delimiter and skipping the first row
 # Also drop the last 'Unnamed' column
 bank_data = pd.read_csv(
-    "../data/save.csv", encoding=encoding, delimiter=";", skiprows=1
+    "../data/temp/" + csv_filename, encoding=encoding, delimiter=";", skiprows=1
 )
 bank_data = bank_data.drop(columns=["Unnamed: 4"])
 
@@ -40,6 +48,11 @@ bank_data = bank_data.dropna(subset=["Montant"])
 # Trier par date
 bank_data = bank_data.sort_values("Date")
 
+# Creer un fichier JSON avec le nom du fichier CSV sans l'extension avec toutes les données de bank_data
+json_file = csv_file.replace(".csv", ".json")
+bank_data.to_json(json_file, orient="records")
+json_filename = os.path.basename(json_file)
+os.rename("../data/temp/" + json_filename, "../data/JSON/" + json_filename)
 
 # Calculate balance
 bank_data["Balance"] = bank_data["Montant"].cumsum()

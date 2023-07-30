@@ -25,3 +25,10 @@ dist-ssr
 
 # Python Virtual Environment
 venv/
+
+# Datas
+
+/data/*
+
+# Script 
+gogithub.sh
